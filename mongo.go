@@ -17,19 +17,19 @@ var client *mongo.Client
 type DP map[string]interface{}
 
 // InitMG initializes the MongoDB connections.
-func InitMG(dbConStr string) error {
+func InitMG(dbConStr string) (*mongo.Client, error) {
 	client, err := mongo.NewClient(options.Client().ApplyURI(dbConStr))
 	if err != nil {
-		return err
+		return client, err
 	}
 	ctxMG, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
 	err = client.Connect(ctxMG)
 	if err != nil {
-		return err
+		return client, err
 	}
-	return nil
+	return client, nil
 }
 
 // InsertOne insert one row in MongoDB collection.
@@ -96,20 +96,20 @@ func DeleteOneByID(dbName, collName string, client *mongo.Client, objID string) 
 }
 
 // FindOneByID find a single row filtered by MongoDB object ID from a collection.
-func FindOneByID(dbName, collName string, client *mongo.Client, objID string) (bool, error) {
+func FindOneByID(dbName, collName string, client *mongo.Client, objID string) (DP, error) {
 	collection := client.Database(dbName).Collection(collName)
 
 	var result = make(map[string]interface{})
 	id, err := primitive.ObjectIDFromHex(objID)
 	if err != nil {
-		return false, err
+		return result, err
 	}
 
 	err = collection.FindOne(context.TODO(), bson.M{"_id": id}).Decode(&result)
 	if err != nil {
-		return false, err
+		return result, err
 	}
-	return true, nil
+	return result, nil
 }
 
 // Find find a multiple rows filtered by MongoDB object ID from a collection.
