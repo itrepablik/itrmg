@@ -39,7 +39,6 @@ func InitMG(dbConStr string) (*mongo.Client, error) {
 // InsertOne insert one row in MongoDB collection.
 func InsertOne(dbName, collName string, client *mongo.Client, data DP) (bool, error) {
 	collection := client.Database(dbName).Collection(collName)
-
 	_, err := collection.InsertOne(context.TODO(), data)
 	if err != nil {
 		return false, err
@@ -50,11 +49,9 @@ func InsertOne(dbName, collName string, client *mongo.Client, data DP) (bool, er
 // UpdateOne update a single row in MongoDB collection.
 func UpdateOne(dbName, collName string, client *mongo.Client, data DP, filter DP) (bool, error) {
 	collection := client.Database(dbName).Collection(collName)
-
 	update := bson.M{
 		"$set": data,
 	}
-
 	_, err := collection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		return false, err
@@ -65,7 +62,6 @@ func UpdateOne(dbName, collName string, client *mongo.Client, data DP, filter DP
 // UpdateOneByID update a single row filtered by MongoDB object ID from a MongoDB collection.
 func UpdateOneByID(dbName, collName string, client *mongo.Client, data DP, objID string) (bool, error) {
 	collection := client.Database(dbName).Collection(collName)
-
 	id, err := primitive.ObjectIDFromHex(objID)
 	if err != nil {
 		return false, err
@@ -75,7 +71,6 @@ func UpdateOneByID(dbName, collName string, client *mongo.Client, data DP, objID
 	update := bson.M{
 		"$set": data,
 	}
-
 	_, err = collection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		return false, err
@@ -86,7 +81,6 @@ func UpdateOneByID(dbName, collName string, client *mongo.Client, data DP, objID
 // DeleteOneByID delete any single row permanently filetered MongoDB object ID from a MongoDB collection.
 func DeleteOneByID(dbName, collName string, client *mongo.Client, objID string) (bool, error) {
 	collection := client.Database(dbName).Collection(collName)
-
 	id, err := primitive.ObjectIDFromHex(objID)
 	if err != nil {
 		return false, err
@@ -102,7 +96,6 @@ func DeleteOneByID(dbName, collName string, client *mongo.Client, objID string) 
 // FindOneByID find a single row filtered by MongoDB object ID from a collection.
 func FindOneByID(dbName, collName string, client *mongo.Client, objID string) (DP, error) {
 	collection := client.Database(dbName).Collection(collName)
-
 	var result = make(map[string]interface{})
 	id, err := primitive.ObjectIDFromHex(objID)
 	if err != nil {
@@ -127,7 +120,6 @@ func Find(dbName, collName string, client *mongo.Client, filter DP, sortOrder DP
 	}
 
 	collection := client.Database(dbName).Collection(collName)
-
 	results := []map[string]interface{}{}
 	cursor, err := collection.Find(context.TODO(), filter, opts)
 	if err != nil {
@@ -140,9 +132,19 @@ func Find(dbName, collName string, client *mongo.Client, filter DP, sortOrder DP
 		cursor.Decode(&rowData)
 		results = append(results, rowData)
 	}
-
 	if err := cursor.Err(); err != nil {
 		return results, err
 	}
 	return results, nil
+}
+
+// IsExist find any single row from a specified collection.
+func IsExist(dbName, collName string, client *mongo.Client, filter DP) (bool, error) {
+	collection := client.Database(dbName).Collection(collName)
+	var result = make(map[string]interface{})
+	err := collection.FindOne(context.TODO(), filter).Decode(&result)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
