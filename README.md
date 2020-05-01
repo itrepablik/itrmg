@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	_dbConStr = "mongodb://username:password.@localhost:27017"
+	_dbConStr = "mongodb://username:password@localhost:27017"
 	_dbName   = "database_name"
 	_collName = "collection_name"
 )
