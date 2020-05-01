@@ -13,8 +13,12 @@ import (
 // Initialize the MongoDB's client's pointer.
 var client *mongo.Client
 
-// DP type is a collection of parameters.
+// DP type is a data parameters to be used as common map container for collection results
+// or use as the filter parameters, etc.
 type DP map[string]interface{}
+
+// DM type is a slice map container for collection results storage.
+type DM []map[string]interface{}
 
 // InitMG initializes the MongoDB connections.
 func InitMG(dbConStr string) (*mongo.Client, error) {
@@ -44,7 +48,7 @@ func InsertOne(dbName, collName string, client *mongo.Client, data DP) (bool, er
 }
 
 // UpdateOne update a single row in MongoDB collection.
-func UpdateOne(dbName, collName string, client *mongo.Client, data DP, filter bson.M) (bool, error) {
+func UpdateOne(dbName, collName string, client *mongo.Client, data DP, filter DP) (bool, error) {
 	collection := client.Database(dbName).Collection(collName)
 
 	update := bson.M{
@@ -79,7 +83,7 @@ func UpdateOneByID(dbName, collName string, client *mongo.Client, data DP, objID
 	return true, nil
 }
 
-// DeleteOneByID delete a single row filetered MongoDB object ID from a MongoDB collection.
+// DeleteOneByID delete any single row permanently filetered MongoDB object ID from a MongoDB collection.
 func DeleteOneByID(dbName, collName string, client *mongo.Client, objID string) (bool, error) {
 	collection := client.Database(dbName).Collection(collName)
 
@@ -113,18 +117,28 @@ func FindOneByID(dbName, collName string, client *mongo.Client, objID string) (D
 }
 
 // Find find a multiple rows filtered by MongoDB object ID from a collection.
-func Find(dbName, collName string, client *mongo.Client, filter DP) (DP, error) {
+func Find(dbName, collName string, client *mongo.Client, filter DP, sortOrder DP, setLimit int64) (DM, error) {
+	opts := options.Find()
+	opts.SetSort(sortOrder)
+
+	// Set row limit only when it's greater than zero, otherwise, set to no row limits
+	if setLimit > 0 {
+		opts.SetLimit(setLimit)
+	}
+
 	collection := client.Database(dbName).Collection(collName)
 
-	var results = make(map[string]interface{})
-	cursor, err := collection.Find(context.TODO(), filter)
+	results := []map[string]interface{}{}
+	cursor, err := collection.Find(context.TODO(), filter, opts)
 	if err != nil {
 		return results, err
 	}
 	defer cursor.Close(context.TODO())
 
 	for cursor.Next(context.TODO()) {
-		cursor.Decode(&results)
+		rowData := make(map[string]interface{})
+		cursor.Decode(&rowData)
+		results = append(results, rowData)
 	}
 
 	if err := cursor.Err(); err != nil {
