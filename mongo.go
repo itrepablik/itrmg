@@ -10,8 +10,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// Initialize the MongoDB's client's pointer.
-var client *mongo.Client
+// ClientMG initialize the MongoDB's client's pointer.
+var ClientMG *mongo.Client
 
 // DP type is a data parameters to be used as common map container for collection results
 // or use as the filter parameters, etc.
@@ -22,18 +22,18 @@ type DM []map[string]interface{}
 
 // InitMG initializes the MongoDB connections.
 func InitMG(dbConStr string) (*mongo.Client, error) {
-	client, err := mongo.NewClient(options.Client().ApplyURI(dbConStr))
+	ClientMG, err := mongo.NewClient(options.Client().ApplyURI(dbConStr))
 	if err != nil {
-		return client, err
+		return ClientMG, err
 	}
 	ctxMG, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
-	err = client.Connect(ctxMG)
+	err = ClientMG.Connect(ctxMG)
 	if err != nil {
-		return client, err
+		return ClientMG, err
 	}
-	return client, nil
+	return ClientMG, nil
 }
 
 // InsertOne insert one row in MongoDB collection.
