@@ -20,20 +20,23 @@ import (
 )
 
 const (
-	_dbConStr = "mongodb://username:password@localhost:27017"
+	_dbConStr = "mongodb://username:password.@localhost:27017"
 	_dbName   = "database_name"
 	_collName = "collection_name"
 )
 
+// ClientMG set the MongoDB's client variable to be called globally across your Go's project
+var ClientMG = itrmg.ClientMG
+
 func main() {
 	// Initialize the MongoDB connection
-	client, err := itrmg.InitMG(_dbConStr)
+	ClientMG, err := itrmg.InitMG(_dbConStr)
 	if err != nil {
 		itrlog.Fatal(err)
 	}
 
 	// itrmg.FindOneByID usage: find single row by using object id in MongoDB collection
-	data, err := itrmg.FindOneByID(_dbName, _collName, client, "5e2a59e3f1a9a91790a13c37")
+	data, err := itrmg.FindOneByID(_dbName, _collName, ClientMG, "5e2a59e3f1a9a91790a13c37")
 	if err != nil {
 		itrlog.Fatal(err)
 	}
@@ -45,7 +48,7 @@ func main() {
 	filter := itrmg.DP{"created_by": "politz", "status": "Used"} // constract your filter query here
 	sortOrder := itrmg.DP{"pc_name": -1}                         // descending sort order
 
-	results, err := itrmg.Find(_dbName, _collName, client, filter, sortOrder, 2)
+	results, err := itrmg.Find(_dbName, _collName, ClientMG, filter, sortOrder, 2)
 	if err != nil {
 		itrlog.Fatal(err)
 	}
@@ -67,7 +70,7 @@ func main() {
 		"is_active":    true,
 	}
 
-	isInserted, err := itrmg.InsertOne(_dbName, _collName, client, newRow)
+	isInserted, err := itrmg.InsertOne(_dbName, _collName, ClientMG, newRow)
 	if err != nil {
 		itrlog.Error(err)
 	}
@@ -87,7 +90,7 @@ func main() {
 		"modified_date": time.Now(),
 	}
 
-	isUpdated, err := itrmg.UpdateOne(_dbName, _collName, client, updateRow, updateFilter)
+	isUpdated, err := itrmg.UpdateOne(_dbName, _collName, ClientMG, updateRow, updateFilter)
 	if err != nil {
 		itrlog.Error(err)
 	}
@@ -107,7 +110,7 @@ func main() {
 		"modified_date": time.Now(),
 	}
 
-	isUpdated1, err := itrmg.UpdateOneByID(_dbName, _collName, client, updateRow1, objID)
+	isUpdated1, err := itrmg.UpdateOneByID(_dbName, _collName, ClientMG, updateRow1, objID)
 	if err != nil {
 		itrlog.Error(err)
 	}
@@ -118,7 +121,7 @@ func main() {
 
 	// DeleteOneByID usage: delete any single row permanently filtered by object id.
 	rowObjID := "5eab87c0fcde9804abc5fbc9"
-	isDeleted, err := itrmg.DeleteOneByID(_dbName, _collName, client, rowObjID)
+	isDeleted, err := itrmg.DeleteOneByID(_dbName, _collName, ClientMG, rowObjID)
 	if err != nil {
 		itrlog.Error(err)
 	}
