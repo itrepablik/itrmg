@@ -7,9 +7,126 @@ go get -u github.com/itrepablik/itrmg
 ```
 
 # Usage
-This is sample will be provided here soonest...
+These are the various examples on how you can use the **itrmg** package for your next Go project with MongoDB database.
 ```
-In coming...
+package main
+
+import (
+	"fmt"
+	"time"
+
+	"github.com/itrepablik/itrlog"
+	"github.com/itrepablik/itrmg"
+)
+
+const (
+	_dbConStr = "mongodb://username:password.@localhost:27017"
+	_dbName   = "database_name"
+	_collName = "collection_name"
+)
+
+func main() {
+	// Initialize the MongoDB connection
+	client, err := itrmg.InitMG(_dbConStr)
+	if err != nil {
+		itrlog.Fatal(err)
+	}
+
+	// itrmg.FindOneByID usage: find single row by using object id in MongoDB collection
+	data, err := itrmg.FindOneByID(_dbName, _collName, client, "5e2a59e3f1a9a91790a13c37")
+	if err != nil {
+		itrlog.Fatal(err)
+	}
+
+	// Get the specific column name with it's value
+	fmt.Println("data: ", data["pc_name"])
+
+	// itrmg.Find usage: use filter, sort order and row limit for your query.
+	filter := itrmg.DP{"created_by": "politz", "status": "Used"} // constract your filter query here
+	sortOrder := itrmg.DP{"pc_name": -1}                         // descending sort order
+
+	results, err := itrmg.Find(_dbName, _collName, client, filter, sortOrder, 2)
+	if err != nil {
+		itrlog.Fatal(err)
+	}
+
+	// Iterate the 'results' from the itrmg.Find query
+	for _, value := range results {
+		fmt.Println(value["pc_name"])
+	}
+
+	// InsertOne usage: this will insert one row to your collection
+	newRow := itrmg.DP{
+		"pc_name":      "pc name 1234",
+		"license":      "abc 123",
+		"price":        23,
+		"ip_address":   "123456",
+		"created_by":   "politz",
+		"created_date": time.Now(),
+		"status":       "Available",
+		"is_active":    true,
+	}
+
+	isInserted, err := itrmg.InsertOne(_dbName, _collName, client, newRow)
+	if err != nil {
+		itrlog.Error(err)
+	}
+
+	if isInserted {
+		fmt.Println("New row has been inserted!")
+	}
+
+	// UpdateOne usage: update only one row to your MongoDB collection
+	updateFilter := itrmg.DP{"license": "abc 123", "created_by": "politz"}
+	updateRow := itrmg.DP{
+		"pc_name":       "pc name 888",
+		"license":       "abc 111",
+		"price":         30,
+		"ip_address":    "123456",
+		"modified_by":   "politz",
+		"modified_date": time.Now(),
+	}
+
+	isUpdated, err := itrmg.UpdateOne(_dbName, _collName, client, updateRow, updateFilter)
+	if err != nil {
+		itrlog.Error(err)
+	}
+
+	if isUpdated {
+		fmt.Println("Row has been modified successfully!")
+	}
+
+	// UpdateOneByID usage: single row update by using object id
+	objID := "5eab87c0fcde9804abc5fbc9"
+	updateRow1 := itrmg.DP{
+		"pc_name":       "pc name 000",
+		"license":       "abc 000",
+		"price":         0,
+		"ip_address":    "123456",
+		"modified_by":   "politz",
+		"modified_date": time.Now(),
+	}
+
+	isUpdated1, err := itrmg.UpdateOneByID(_dbName, _collName, client, updateRow1, objID)
+	if err != nil {
+		itrlog.Error(err)
+	}
+
+	if isUpdated1 {
+		fmt.Println("Row has been modified successfully!")
+	}
+
+	// DeleteOneByID usage: delete any single row permanently filtered by object id.
+	rowObjID := "5eab87c0fcde9804abc5fbc9"
+	isDeleted, err := itrmg.DeleteOneByID(_dbName, _collName, client, rowObjID)
+	if err != nil {
+		itrlog.Error(err)
+	}
+
+	if isDeleted {
+		fmt.Println("Row has been deleted successfully!")
+	}
+}
 ```
 
 # License
