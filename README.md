@@ -129,6 +129,16 @@ func main() {
 	if isDeleted {
 		fmt.Println("Row has been deleted successfully!")
 	}
+	
+	// IsExist usage: check if specific information found in certain collection
+	filter = itrmg.DP{"created_by": "politz"}
+	isFound, err := itrmg.IsExist(_dbName, _collName, ClientMG, filter)
+	if err != nil {
+		itrlog.Error(err)
+	}
+	if isFound {
+		fmt.Println("Record found!")
+	}
 }
 ```
 
