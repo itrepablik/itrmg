@@ -2,6 +2,7 @@ package itrmg
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -113,7 +114,6 @@ func FindOneByID(dbName, collName string, client *mongo.Client, objID string) (D
 func Find(dbName, collName string, client *mongo.Client, filter DP, sortOrder DP, setLimit int64) (DM, error) {
 	opts := options.Find()
 	opts.SetSort(sortOrder)
-
 	// Set row limit only when it's greater than zero, otherwise, set to no row limits
 	if setLimit > 0 {
 		opts.SetLimit(setLimit)
@@ -147,4 +147,39 @@ func IsExist(dbName, collName string, client *mongo.Client, filter DP) (bool, er
 		return false, err
 	}
 	return true, nil
+}
+
+// GetStructFieldValue gets the string value of any specific field name from a collection.
+// e.g Struct field "PCName" then the bson field is "pc_name", the bson field name must be
+func GetStructFieldValue(dbName, collName string, client *mongo.Client, filter DP, bsonFieldName string) (string, error) {
+	opts := options.Find()
+	opts.SetLimit(1)
+	opts.SetProjection(bson.M{
+		bsonFieldName: 1,
+		"score":       bson.M{"$meta": "textScore"},
+	})
+	opts.SetSort(bson.M{"score": bson.M{"$meta": "textScore"}})
+
+	collection := client.Database(dbName).Collection(collName)
+	results := []map[string]interface{}{}
+	cursor, err := collection.Find(context.TODO(), filter, opts)
+	if err != nil {
+		return "", err
+	}
+	defer cursor.Close(context.TODO())
+
+	for cursor.Next(context.TODO()) {
+		rowData := make(map[string]interface{})
+		cursor.Decode(&rowData)
+		results = append(results, rowData)
+	}
+	if err := cursor.Err(); err != nil {
+		return "", err
+	}
+
+	strVal := ""
+	for _, value := range results {
+		strVal = fmt.Sprintf("%v", value[bsonFieldName])
+	}
+	return strVal, nil
 }
