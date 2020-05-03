@@ -149,9 +149,9 @@ func IsExist(dbName, collName string, client *mongo.Client, filter DP) (bool, er
 	return true, nil
 }
 
-// GetStructFieldValue gets the string value of any specific field name from a collection.
+// GetFieldValue gets the string value of any specific field name from a collection.
 // e.g Struct field "PCName" then the bson field is "pc_name", the bson field name must be
-func GetStructFieldValue(dbName, collName string, client *mongo.Client, filter DP, bsonFieldName string) (string, error) {
+func GetFieldValue(dbName, collName string, client *mongo.Client, filter DP, bsonFieldName string) (string, error) {
 	opts := options.Find()
 	opts.SetLimit(1)
 	opts.SetProjection(bson.M{
