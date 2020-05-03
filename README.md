@@ -139,6 +139,14 @@ func main() {
 	if isFound {
 		fmt.Println("Record found!")
 	}
+	
+	// GetStructFieldValue usage: get the specific field value from a certain collection.
+	filter := itrmg.DP{"pc_name": "PPP Name"}
+	strVal, err := itrmg.GetStructFieldValue(_dbName, _collName, ClientMG, filter, "license")
+	if err != nil {
+		itrlog.Error(err)
+	}
+	fmt.Println("strVal: ", strVal)
 }
 ```
 
