@@ -14,6 +14,9 @@ import (
 // ClientMG initialize the MongoDB's client's pointer.
 var ClientMG *mongo.Client
 
+// MGC is a Mongo client type
+type MGC *mongo.Client
+
 // DP type is a data parameters to be used as common map container for collection results
 // or use as the filter parameters, etc.
 type DP map[string]interface{}
@@ -94,6 +97,16 @@ func DeleteOneByID(dbName, collName string, client *mongo.Client, objID string) 
 	return true, nil
 }
 
+// DeleteOne delete any single row permanently from a collection.
+func DeleteOne(dbName, collName string, client *mongo.Client, filter DP) (bool, error) {
+	collection := client.Database(dbName).Collection(collName)
+	_, err := collection.DeleteOne(context.TODO(), filter)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
 // FindOneByID find a single row filtered by MongoDB object ID from a collection.
 func FindOneByID(dbName, collName string, client *mongo.Client, objID string) (DP, error) {
 	collection := client.Database(dbName).Collection(collName)
@@ -110,11 +123,22 @@ func FindOneByID(dbName, collName string, client *mongo.Client, objID string) (D
 	return result, nil
 }
 
+// FindOne find a single row and retrieves all columns from a collection.
+func FindOne(dbName, collName string, client *mongo.Client, filter DP) (DP, error) {
+	collection := client.Database(dbName).Collection(collName)
+	var result = make(map[string]interface{})
+
+	err := collection.FindOne(context.TODO(), filter).Decode(&result)
+	if err != nil {
+		return result, err
+	}
+	return result, nil
+}
+
 // Find find a multiple rows filtered by MongoDB object ID from a collection.
 func Find(dbName, collName string, client *mongo.Client, filter DP, sortOrder DP, setLimit int64) (DM, error) {
 	opts := options.Find()
 	opts.SetSort(sortOrder)
-	// Set row limit only when it's greater than zero, otherwise, set to no row limits
 	if setLimit > 0 {
 		opts.SetLimit(setLimit)
 	}
@@ -163,6 +187,51 @@ func GetFieldValue(dbName, collName string, client *mongo.Client, filter DP, bso
 	collection := client.Database(dbName).Collection(collName)
 	results := []map[string]interface{}{}
 	cursor, err := collection.Find(context.TODO(), filter, opts)
+	if err != nil {
+		return "", err
+	}
+	defer cursor.Close(context.TODO())
+
+	for cursor.Next(context.TODO()) {
+		rowData := make(map[string]interface{})
+		cursor.Decode(&rowData)
+		results = append(results, rowData)
+	}
+	if err := cursor.Err(); err != nil {
+		return "", err
+	}
+
+	strVal := ""
+	for _, value := range results {
+		strVal = fmt.Sprintf("%v", value[bsonFieldName])
+	}
+	return strVal, nil
+}
+
+// CountRows gets the total number of rows from a collection.
+func CountRows(dbName, collName string, client *mongo.Client, filter DP) (int64, error) {
+	collection := client.Database(dbName).Collection(collName)
+	opts := options.Count().SetMaxTime(2 * time.Second)
+	count, err := collection.CountDocuments(context.TODO(), filter, opts)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+// GetFieldValueByID gets the string value of any specific field filtered by object id from a collection.
+func GetFieldValueByID(dbName, collName string, client *mongo.Client, objID, bsonFieldName string) (string, error) {
+	opts := options.Find()
+	opts.SetLimit(1)
+
+	id, err := primitive.ObjectIDFromHex(objID)
+	if err != nil {
+		return "", err
+	}
+
+	collection := client.Database(dbName).Collection(collName)
+	results := []map[string]interface{}{}
+	cursor, err := collection.Find(context.TODO(), bson.M{"_id": id}, opts)
 	if err != nil {
 		return "", err
 	}
