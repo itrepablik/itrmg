@@ -149,6 +149,18 @@ func main() {
 	fmt.Println("strVal: ", strVal)
 }
 ```
+Optionally, if you've a struct for your data structure, you can specify the object id as "itrmg.ObjID".
+```
+package models
 
+import "github.com/itrepablik/itrmg"
+
+// YourDataStruct is a collection of your own data structure here.
+type YourDataStruct struct {
+	ID       itrmg.ObjID `json:"_id" bson:"_id"`
+	TypeName string      `json:"type_name" bson:"type_name"`
+	IsActive bool        `json:"is_active" bson:"is_active"`
+}
+```
 # License
 Code is distributed under MIT license, feel free to use it in your proprietary projects as well.
