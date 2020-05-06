@@ -17,6 +17,9 @@ var ClientMG *mongo.Client
 // MGC is a Mongo client type
 type MGC *mongo.Client
 
+// ObjID is the MongoDB BSON ObjectID type.
+type ObjID primitive.ObjectID
+
 // DP type is a data parameters to be used as common map container for collection results
 // or use as the filter parameters, etc.
 type DP map[string]interface{}
