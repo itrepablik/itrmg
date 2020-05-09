@@ -3,6 +3,7 @@ package itrmg
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -254,4 +255,11 @@ func GetFieldValueByID(dbName, collName string, client *mongo.Client, objID, bso
 		strVal = fmt.Sprintf("%v", value[bsonFieldName])
 	}
 	return strVal, nil
+}
+
+// BareObjID removes the "ObjectID()" from the object id and returns the bare string value only.
+func BareObjID(objectID string) string {
+	res := strings.Replace(objectID, "ObjectID(", "", -1)
+	res = strings.Replace(res, ")", "", -1)
+	return res
 }
