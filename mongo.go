@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/itrepablik/sakto"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -261,5 +262,5 @@ func GetFieldValueByID(dbName, collName string, client *mongo.Client, objID, bso
 func BareObjID(objectID string) string {
 	res := strings.Replace(objectID, "ObjectID(", "", -1)
 	res = strings.Replace(res, ")", "", -1)
-	return res
+	return sakto.TrimQ(res)
 }
